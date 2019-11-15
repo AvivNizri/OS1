@@ -4,7 +4,7 @@
 int main(int argc, char* argv[]){
 	if(argc !=3){
 		printf("The system got more items than needed..\n exiting...");
-		exit 0;
+		return 0;
 	}
 	// Opening Both Files and holding their file descriptors
 	int File0 = open(argv[1], O_RDONLY);
@@ -15,26 +15,29 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
+	int buff0, buff1 = 0;	
+
 	do{
 		char buffer0, buffer1 = 0;
-		int buff0 = read(File0, &buffer0, 1);
-		int buff1 = read(File1, &buffer1, 1);
-		printf("FIle0 char is %c\n", buffer0);
-		printf("FIle1 char is %c\n", buffer1);
+		buff0 = read(File0, &buffer0, 1);
+		buff1 = read(File1, &buffer1, 1);
+		//printf("FIle0 char is %c\n", buffer0);
+		//printf("FIle1 char is %c\n", buffer1);
 		if(buff0 != buff1){
 			close(File0);
 			close(File1);
-			printf("The Files not the same, exited 1");
+			printf("The Files not the same, exited 1\n");
 			return 1;
 		}else{
 			buff0 = read(File0, &buffer0, 1);
 			buff1 = read(File1, &buffer1, 1);
-			printf("FIle0 char is %c\n", buffer0);
-			printf("FIle1 char is %c\n", buffer1);
+			//printf("FIle0 char is %c\n", buffer0);
+			//printf("FIle1 char is %c\n", buffer1);
 		}
 	}while(buff0 && buff1);
 
 	close(File0);
 	close(File1);
+	printf("The Files are the same!! , exited 2\n");
 	return 2;
 }
