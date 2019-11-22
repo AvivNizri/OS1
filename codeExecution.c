@@ -10,7 +10,7 @@ void exploreFilesRecursively(char *path);
 int main(int argc, char* argv[])
 {
     if(argc != 3){
-        printf("The system got more items than needed..\n exiting...");
+        printf("The system got unexcpected amount of items..\n exiting...");
         return 0;
     }
 
@@ -68,7 +68,24 @@ void exploreFilesRecursively(char* basePath, char* input, char* output)
         // Avoid getting into hidden and system dir
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
-            printf("%s\n", dp->d_name);
+            printf("Folder - %s\n", dp->d_name);
+
+            pid_t pid = fork();
+            if (pid == 0) {
+
+                // Building the char* argv input argument for the executed program
+                char* prog_args[2];
+                my_args[0] = dp->d_name;
+                my_args[1] = input;
+                // executing the inner program with the relevant arguments
+                //execv("/usr/bin/gcc", dp->d_name);  -- thats for compilation
+                execvp(dp->d_name, prog_args);
+                
+                exit(127); /* only if execv fails */
+    }
+    else { /* pid!=0; parent process */
+        waitpid(pid,0,0); /* wait for child to exit */
+    }
 
             
         }
