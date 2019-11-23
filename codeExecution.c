@@ -4,8 +4,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <dirent.h>
 
-void exploreFilesRecursively(char *path);
+
+void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* filesComper);
 
 int main(int argc, char* argv[])
 {
@@ -34,8 +38,20 @@ int main(int argc, char* argv[])
     char* line3 = NULL;
     getline(&line3, &len, configFIle);
 
+    // get the filesComper program for later usage
+    // open current dir
+    DIR* curDir = opendir(".");
+    struct dirent* fc;
+    // loop until finds the expected program
+    while ((fc = readdir(curDir)) != NULL)
+    {
+        // Avoid getting into hidden and system dir
+        if (strcmp(fc->d_name, "filesComper") == 0){
+            break;
+        }
+    }
 
-    exploreFilesRecursively(line1, line2, line3);
+    exploreFilesRecursively(line1, line2, line3, fc);
 
     // Closing files and buffers
     close(configFIle);
@@ -52,7 +68,7 @@ int main(int argc, char* argv[])
  * considering path as base path.
  */
 
-void exploreFilesRecursively(char* basePath, char* input, char* output)
+void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* filesComper)
 {
     char path[1000];
     // dirent is the struct which holds dirPath with tons on prop
@@ -83,14 +99,26 @@ void exploreFilesRecursively(char* basePath, char* input, char* output)
 
                 // Building the char* argv input argument for the executed program
                 char* prog_args[2];
-                my_args[0] = dp->d_name;
-                my_args[1] = input;
+                prog_args[0] = dp->d_name;
+                prog_args[1] = input;
 
                 // executing the inner program with the relevant arguments
                 // execv("/usr/bin/gcc", dp->d_name);  -- thats for compilation
                 execvp(dp->d_name, prog_args);
+                close(result);
 
-                // check compare
+                // comparison between the output file and the expected
+                // before we re-use the stdout as the screen and not the file
+                dup2(1, result);
+
+                // Building the char* argv input argument for the executed program
+                char* args[3];
+                args[0] = filesComper->d_name;
+                args[1] = result;
+                args[2] = output;
+                execvp(filesComper->d_name,args);
+
+                // now we should catch the stdout to see what is the fileComper result
 
                 exit(127); /* only if execv fails */
             }
