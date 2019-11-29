@@ -81,6 +81,9 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* 
 
     while ((dp = readdir(dir)) != NULL)
     {
+        // maybe add here the writing to the csv file to write the student name
+
+        
         // Avoid getting into hidden and system dir
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
@@ -119,7 +122,10 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* 
                 execvp(filesComper->d_name,args);
 
                 // now we should catch the stdout to see what is the fileComper result
-
+                <<check over the internet>>
+                if(return == 2){
+                    // update 
+                }
                 exit(127); /* only if execv fails */
             }
             else { /* pid!=0; parent process */
