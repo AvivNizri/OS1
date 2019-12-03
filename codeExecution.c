@@ -51,9 +51,12 @@ int main(int argc, char* argv[])
         }
     }
 
-    exploreFilesRecursively(line1, line2, line3, fc);
+    int resultCSV = open("result.csv", O_WRONLY | O_CREAT | O_TRUNC , 0666);
+
+    exploreFilesRecursively(line1, line2, line3, fc, resultCSV);
 
     // Closing files and buffers
+    close(resultCSV);
     close(configFIle);
     free(line1);
     free(line2);
@@ -68,7 +71,7 @@ int main(int argc, char* argv[])
  * considering path as base path.
  */
 
-void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* filesComper)
+void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* filesComper, int resultFile)
 {
     char path[1000];
     // dirent is the struct which holds dirPath with tons on prop
@@ -83,14 +86,15 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* 
     {
         // maybe add here the writing to the csv file to write the student name
 
-        
         // Avoid getting into hidden and system dir
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
             //printf("Folder - %s\n", dp->d_name);
 
+            // Building the char* argv input argument for the executed program
+            char* prog_args[2];
+
             pid_t pid = fork();
-             
 
             if (pid == 0) {
                 // execution result file
@@ -99,39 +103,48 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, dirent* 
                 // here the newfd is the file descriptor of stdout (i.e. 1) 
                 // All the printf statements will be written in the file 
                 dup2(result, 1); 
-
-                // Building the char* argv input argument for the executed program
-                char* prog_args[2];
+ 
                 prog_args[0] = dp->d_name;
                 prog_args[1] = input;
 
                 // executing the inner program with the relevant arguments
                 // execv("/usr/bin/gcc", dp->d_name);  -- thats for compilation
+                // also remember that the child process as been terminated
                 execvp(dp->d_name, prog_args);
+            }else{
                 close(result);
+                free(prog_args);
+            }
 
-                // comparison between the output file and the expected
-                // before we re-use the stdout as the screen and not the file
-                dup2(1, result);
+            // comparison between the output file and the expected with the program from part1
 
-                // Building the char* argv input argument for the executed program
-                char* args[3];
+            // first of all, we re-use the stdout as the screen and not the file
+            dup2(1, result);
+            int ret;
+            char* args[3];
+            // forking again
+            pid_t pid2 = fork();
+            if(pid2 == 0){
+                // Building the char* argv input argument for the executed program  
                 args[0] = filesComper->d_name;
                 args[1] = result;
                 args[2] = output;
                 execvp(filesComper->d_name,args);
-
-                // now we should catch the stdout to see what is the fileComper result
-                <<check over the internet>>
-                if(return == 2){
-                    // update 
-                }
-                exit(127); /* only if execv fails */
+            }else{
+                wait(&ret);
+                free(args);
             }
-            else { /* pid!=0; parent process */
-                waitpid(pid,0,0); /* wait for child to exit */
+            if(ret == 2){
+                // write 100 to the student in the file
+                resultFile.write(dp->d_name);
+                resultFile.write(",");
+                resultFile.write("100");
+            }else{
+                // write 0 to the student in the file
+                resultFile.write(dp->d_name);
+                resultFile.write(",");
+                resultFile.write("0");
             }
-            close(result);
         }
     }
 
