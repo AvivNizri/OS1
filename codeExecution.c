@@ -14,14 +14,14 @@
 
 int main(int argc, char* argv[])
 {
-    if(argc != 3){
+    if(argc != 2){
         printf("The system got unexcpected amount of items..\n exiting...");
         return 0;
     }
 
-    int configFIle = fopen(strcat(argv[2],argv[1]), O_RDONLY);
+    FILE* configFIle = fopen(strcat(argv[2],argv[1]), "r");
 
-    if(configFIle == -1){
+    if(configFIle == NULL){
         printf("There was an error opening the files\n exiting...");
         return 0;
     }
@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
     // Get the third line which is it the system expected output for every user later on
     char* line3 = NULL;
     getline(&line3, &len, configFIle);
+
+    close(configFIle);
 
     // get the filesComper program for later usage
     // open current dir
@@ -62,7 +64,6 @@ int main(int argc, char* argv[])
 
     // Closing files and buffers
     fclose(resultCSV);
-    close(configFIle);
     free(line1);
     free(line2);
     free(line3);
@@ -84,20 +85,20 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, struct d
     DIR *dir = opendir(basePath);
 
     // Unable to open directory stream
-    if (!dir)
-        return;
+    if (!dir){
+        printf("Problem opening basePath dir");
+        return 0;
+    }
 
     while ((dp = readdir(dir)) != NULL)
     {
-        // maybe add here the writing to the csv file to write the student name
-
         // Avoid getting into hidden and system dir
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
             printf("Folder - %s\n", dp->d_name);
 
             // Building the char* argv input argument for the executed program
-            char* prog_args[2];
+            char* prog_args[3];
 
             pid_t pid = fork();
 
@@ -111,22 +112,25 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, struct d
  
                 prog_args[0] = dp->d_name;
                 prog_args[1] = input;
+                prog_args[2] = NULL;
 
                 // executing the inner program with the relevant arguments
                 // execv("/usr/bin/gcc", dp->d_name);  -- thats for compilation
                 // also remember that the child process as been terminated
-                execvp(studentProg, prog_args);
+                if(execvp(studentProg, prog_args) == -1){
+                    printf("Problem running inner exe file");
+                    return 0;
+                }
             }else{
                 close(result);
                 free(prog_args);
             }
 
             // comparison between the output file and the expected with the program from part1
-
             // first of all, we re-use the stdout as the screen and not the file
             dup2(1, result);
             int ret;
-            char* args[3];
+            char* args[4];
             // forking again
             pid_t pid2 = fork();
             if(pid2 == 0){
@@ -134,13 +138,13 @@ void exploreFilesRecursively(char* basePath, char* input, char* output, struct d
                 args[0] = filesComper->d_name;
                 args[1] = result;
                 args[2] = output;
+                args[3] = NULL;
                 execvp(filesComper->d_name,args);
             }else{
                 wait(&ret);
                 free(args);
             }
-            fprintf(resultFile,"%s", dp->d_name);
-            fprintf(resultFile,"%s", ',');
+            fprintf(resultFile,"%s,", dp->d_name);
             if(ret == 2){
                 // write 100 to the student in the file
                 fprintf(resultFile,"%s", '100\n');
