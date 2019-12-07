@@ -1,3 +1,3 @@
-/home/avivnizri/Documents/testOS
-/home/avivnizri/Documents/osCourse/OS1/input.txt
-/home/avivnizri/Documents/osCourse/OS1/output.txt
+/home/avivnizri/Documents/OScourse/testOS1
+/home/avivnizri/Documents/OScourse/OS1/input.txt
+/home/avivnizri/Documents/OScourse/OS1/output.txt

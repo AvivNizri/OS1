@@ -3,10 +3,12 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <dirent.h>
+#include <sys/fcntl.h>
+#include <sys/wait.h>
 
 #define studentProg "main.exe"
 
@@ -15,22 +17,22 @@
 int main(int argc, char* argv[])
 {
     if(argc != 2){
-        printf("The system got unexcpected amount of items..\n exiting...");
+        printf("The system got unexcpected amount of items..\nexiting...\n");
         return 0;
     }
-
-    FILE* configFIle = fopen(strcat(argv[2],argv[1]), "r");
-
+    printf("file : test");
+    FILE* configFIle = fopen(argv[1], "r");
+    
     if(configFIle == NULL){
         printf("There was an error opening the files\n exiting...");
         return 0;
     }
     size_t len = 0;
-
+    
     char* line1 = NULL;
     // Get the first line of the config file to get the path of entire users
     getline(&line1, &len, configFIle);
-
+    
     // Get the second line which is it the system input for every user later on
     char* line2 = NULL;
     getline(&line2, &len, configFIle);
@@ -40,7 +42,7 @@ int main(int argc, char* argv[])
     getline(&line3, &len, configFIle);
 
     close(configFIle);
-
+    
     // get the filesComper program for later usage
     // open current dir
     DIR* curDir = opendir(".");
@@ -50,6 +52,7 @@ int main(int argc, char* argv[])
     {
         // Avoid getting into hidden and system dir
         if (strcmp(fc->d_name, "filesComper") == 0){
+            
             break;
         }
     }
